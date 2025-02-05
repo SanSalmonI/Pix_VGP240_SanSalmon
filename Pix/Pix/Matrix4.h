@@ -5,15 +5,13 @@
 
 struct Matrix4
 {
-    float _11, _12, _13, _14,
-        _21, _22, _23, _24,
-        _31, _32, _33, _34,
-        _41, _42, _43, _44;
+    // Row-major, 1-based subscripts
+    float _11, _12, _13, _14;
+    float _21, _22, _23, _24;
+    float _31, _32, _33, _34;
+    float _41, _42, _43, _44;
 
-    //
-    // 1) Default constructor
-    //    (delegates to the 4x4 identity constructor below)
-    //
+    // Default Constructor (creates Identity by delegating)
     Matrix4()
         : Matrix4(1.0f, 0.0f, 0.0f, 0.0f,
             0.0f, 1.0f, 0.0f, 0.0f,
@@ -22,23 +20,78 @@ struct Matrix4
     {
     }
 
-    //
-    // 2) Custom constructor with individual float values for each element
-    //
+    // Parameterized Constructor
     Matrix4(float a11, float a12, float a13, float a14,
         float a21, float a22, float a23, float a24,
         float a31, float a32, float a33, float a34,
         float a41, float a42, float a43, float a44)
-        : _11(a11), _12(a12), _13(a13), _14(a14),
-        _21(a21), _22(a22), _23(a23), _24(a24),
-        _31(a31), _32(a32), _33(a33), _34(a34),
-        _41(a41), _42(a42), _43(a43), _44(a44)
+        : _11(a11), _12(a12), _13(a13), _14(a14)
+        , _21(a21), _22(a22), _23(a23), _24(a24)
+        , _31(a31), _32(a32), _33(a33), _34(a34)
+        , _41(a41), _42(a42), _43(a43), _44(a44)
     {
     }
 
-    //
-    // 3) Static function: return an identity matrix
-    //
+    //--------------------------------------------------------------------------
+    // 2. Operator Overloads
+    //--------------------------------------------------------------------------
+
+    // Add two matrices
+    Matrix4 operator+(const Matrix4& rhs) const
+    {
+        return Matrix4(
+            _11 + rhs._11, _12 + rhs._12, _13 + rhs._13, _14 + rhs._14,
+            _21 + rhs._21, _22 + rhs._22, _23 + rhs._23, _24 + rhs._24,
+            _31 + rhs._31, _32 + rhs._32, _33 + rhs._33, _34 + rhs._34,
+            _41 + rhs._41, _42 + rhs._42, _43 + rhs._43, _44 + rhs._44
+        );
+    }
+
+    // Multiply by scalar
+    Matrix4 operator*(float s) const
+    {
+        return Matrix4(
+            _11 * s, _12 * s, _13 * s, _14 * s,
+            _21 * s, _22 * s, _23 * s, _24 * s,
+            _31 * s, _32 * s, _33 * s, _34 * s,
+            _41 * s, _42 * s, _43 * s, _44 * s
+        );
+    }
+
+    // Matrix * Matrix
+    Matrix4 operator*(const Matrix4& rhs) const
+    {
+        return Matrix4(
+            // First row
+            _11 * rhs._11 + _12 * rhs._21 + _13 * rhs._31 + _14 * rhs._41,
+            _11 * rhs._12 + _12 * rhs._22 + _13 * rhs._32 + _14 * rhs._42,
+            _11 * rhs._13 + _12 * rhs._23 + _13 * rhs._33 + _14 * rhs._43,
+            _11 * rhs._14 + _12 * rhs._24 + _13 * rhs._34 + _14 * rhs._44,
+
+            // Second row
+            _21 * rhs._11 + _22 * rhs._21 + _23 * rhs._31 + _24 * rhs._41,
+            _21 * rhs._12 + _22 * rhs._22 + _23 * rhs._32 + _24 * rhs._42,
+            _21 * rhs._13 + _22 * rhs._23 + _23 * rhs._33 + _24 * rhs._43,
+            _21 * rhs._14 + _22 * rhs._24 + _23 * rhs._34 + _24 * rhs._44,
+
+            // Third row
+            _31 * rhs._11 + _32 * rhs._21 + _33 * rhs._31 + _34 * rhs._41,
+            _31 * rhs._12 + _32 * rhs._22 + _33 * rhs._32 + _34 * rhs._42,
+            _31 * rhs._13 + _32 * rhs._23 + _33 * rhs._33 + _34 * rhs._43,
+            _31 * rhs._14 + _32 * rhs._24 + _33 * rhs._34 + _34 * rhs._44,
+
+            // Fourth row
+            _41 * rhs._11 + _42 * rhs._21 + _43 * rhs._31 + _44 * rhs._41,
+            _41 * rhs._12 + _42 * rhs._22 + _43 * rhs._32 + _44 * rhs._42,
+            _41 * rhs._13 + _42 * rhs._23 + _43 * rhs._33 + _44 * rhs._43,
+            _41 * rhs._14 + _42 * rhs._24 + _43 * rhs._34 + _44 * rhs._44
+        );
+    }
+
+    //--------------------------------------------------------------------------
+    // 3. Static Methods for Common Matrices
+    //--------------------------------------------------------------------------
+
     static Matrix4 Identity()
     {
         return Matrix4(
@@ -49,14 +102,10 @@ struct Matrix4
         );
     }
 
-    //
-    // 4) Static rotation methods: X, Y, Z
-    //
     static Matrix4 RotationX(float rad)
     {
         float c = cosf(rad);
         float s = sinf(rad);
-
         return Matrix4(
             1.0f, 0.0f, 0.0f, 0.0f,
             0.0f, c, s, 0.0f,
@@ -69,7 +118,6 @@ struct Matrix4
     {
         float c = cosf(rad);
         float s = sinf(rad);
-
         return Matrix4(
             c, 0.0f, -s, 0.0f,
             0.0f, 1.0f, 0.0f, 0.0f,
@@ -82,7 +130,6 @@ struct Matrix4
     {
         float c = cosf(rad);
         float s = sinf(rad);
-
         return Matrix4(
             c, s, 0.0f, 0.0f,
             -s, c, 0.0f, 0.0f,
@@ -91,10 +138,8 @@ struct Matrix4
         );
     }
 
-    //
-    // 5) Static scale methods
-    //
-    static Matrix4 Scale(float s)
+    // Single-parameter scaling
+    static Matrix4 Scaling(float s)
     {
         return Matrix4(
             s, 0.0f, 0.0f, 0.0f,
@@ -104,19 +149,29 @@ struct Matrix4
         );
     }
 
-    static Matrix4 Scale(const Vector3& s)
+    // Vector3 scaling
+    static Matrix4 Scaling(const Vector3& v)
     {
         return Matrix4(
-            s.x, 0.0f, 0.0f, 0.0f,
-            0.0f, s.y, 0.0f, 0.0f,
-            0.0f, 0.0f, s.z, 0.0f,
+            v.x, 0.0f, 0.0f, 0.0f,
+            0.0f, v.y, 0.0f, 0.0f,
+            0.0f, 0.0f, v.z, 0.0f,
             0.0f, 0.0f, 0.0f, 1.0f
         );
     }
 
-    //
-    // 6) Static translation methods
-    //
+    // New: three-parameter scaling to satisfy the assignment
+    static Matrix4 Scaling(float sx, float sy, float sz)
+    {
+        return Matrix4(
+            sx, 0.0f, 0.0f, 0.0f,
+            0.0f, sy, 0.0f, 0.0f,
+            0.0f, 0.0f, sz, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f
+        );
+    }
+
+    // Translation with floats
     static Matrix4 Translation(float dx, float dy, float dz)
     {
         return Matrix4(
@@ -127,6 +182,7 @@ struct Matrix4
         );
     }
 
+    // Translation with Vector3
     static Matrix4 Translation(const Vector3& d)
     {
         return Matrix4(
@@ -134,55 +190,6 @@ struct Matrix4
             0.0f, 1.0f, 0.0f, 0.0f,
             0.0f, 0.0f, 1.0f, 0.0f,
             d.x, d.y, d.z, 1.0f
-        );
-    }
-
-    //
-    // 7) Operator overloads
-    //    +, *(float), and *(Matrix4)
-    //
-    Matrix4 operator+(const Matrix4& m) const
-    {
-        return Matrix4(
-            _11 + m._11, _12 + m._12, _13 + m._13, _14 + m._14,
-            _21 + m._21, _22 + m._22, _23 + m._23, _24 + m._24,
-            _31 + m._31, _32 + m._32, _33 + m._33, _34 + m._34,
-            _41 + m._41, _42 + m._42, _43 + m._43, _44 + m._44
-        );
-    }
-
-    Matrix4 operator*(float s) const
-    {
-        return Matrix4(
-            _11 * s, _12 * s, _13 * s, _14 * s,
-            _21 * s, _22 * s, _23 * s, _24 * s,
-            _31 * s, _32 * s, _33 * s, _34 * s,
-            _41 * s, _42 * s, _43 * s, _44 * s
-        );
-    }
-
-    Matrix4 operator*(const Matrix4& m) const
-    {
-        return Matrix4(
-            (_11 * m._11) + (_12 * m._21) + (_13 * m._31) + (_14 * m._41),
-            (_11 * m._12) + (_12 * m._22) + (_13 * m._32) + (_14 * m._42),
-            (_11 * m._13) + (_12 * m._23) + (_13 * m._33) + (_14 * m._43),
-            (_11 * m._14) + (_12 * m._24) + (_13 * m._34) + (_14 * m._44),
-
-            (_21 * m._11) + (_22 * m._21) + (_23 * m._31) + (_24 * m._41),
-            (_21 * m._12) + (_22 * m._22) + (_23 * m._32) + (_24 * m._42),
-            (_21 * m._13) + (_22 * m._23) + (_23 * m._33) + (_24 * m._43),
-            (_21 * m._14) + (_22 * m._24) + (_23 * m._34) + (_24 * m._44),
-
-            (_31 * m._11) + (_32 * m._21) + (_33 * m._31) + (_34 * m._41),
-            (_31 * m._12) + (_32 * m._22) + (_33 * m._32) + (_34 * m._42),
-            (_31 * m._13) + (_32 * m._23) + (_33 * m._33) + (_34 * m._43),
-            (_31 * m._14) + (_32 * m._24) + (_33 * m._34) + (_34 * m._44),
-
-            (_41 * m._11) + (_42 * m._21) + (_43 * m._31) + (_44 * m._41),
-            (_41 * m._12) + (_42 * m._22) + (_43 * m._32) + (_44 * m._42),
-            (_41 * m._13) + (_42 * m._23) + (_43 * m._33) + (_44 * m._43),
-            (_41 * m._14) + (_42 * m._24) + (_43 * m._34) + (_44 * m._44)
         );
     }
 };
